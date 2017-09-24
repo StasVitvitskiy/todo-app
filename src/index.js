@@ -4,10 +4,30 @@ import styled from 'styled-components';
 import './app.css';
 import TodoItem from './todo-item';
 import BottomPanel from './bottom-panel'; 
-
+import { Checkbox } from 'antd';
+import 'antd/dist/antd.css';
+function readFromStorage() {
+  try {
+    return JSON.parse(localStorage.todos)
+  }
+  catch(error) {
+    return []
+  }
+}
+function saveToStorage(todos) {
+  try {
+    localStorage.todos = JSON.stringify(todos);
+  }
+  catch (error){
+    
+  }
+}
 function filterAll() {
   return true
 }
+filterAll.displayName = 'all';
+filterActive.displayName = 'active';
+filterCompleted.displayName = 'completed';
 function filterActive(item) {
   return item.done == false
 }
@@ -16,8 +36,13 @@ function filterCompleted(item) {
 }
 class App extends Component {
   state = {
-    todos:[],
+    todos:readFromStorage(),
     filter:filterAll
+  }
+  setState = (nextState) => {
+    super.setState(nextState, () => {
+      saveToStorage(this.state.todos);
+    });
   }
   onKeyPress = (e) => {
     const value = e.nativeEvent.target.value;
@@ -34,7 +59,7 @@ class App extends Component {
     }
   }
   toggleAll = (e) => {
-    const checked = e.nativeEvent.target.checked;
+    const checked = e.target.checked;
     const todos = this.state.todos;
     this.setState({
       todos:todos.map(item => {
@@ -48,7 +73,7 @@ class App extends Component {
     this.setState({
       todos:todos.map(item => {
         if(item.id == id) {
-          item.done = e.nativeEvent.target.checked
+          item.done = e.target.checked
         }
         return item;
       })
@@ -96,11 +121,12 @@ class App extends Component {
         <Section>
         <InputWrapper>
           {this.state.todos.length && 
-        <CheckAll
-            type='checkbox'
+        <CheckAll>
+            <Checkbox
             onChange={this.toggleAll}
             checked={this.allChecked()}
-        />
+            />
+        </CheckAll>
             || ''
             }
           <Input 
@@ -117,6 +143,7 @@ class App extends Component {
              />)}
           </List>
           <BottomPanel
+            filter={this.state.filter.displayName}
             todos={this.state.todos}
             clearCompleted={this.clearCompleted}
             setFilter={this.setFilter}
@@ -126,10 +153,10 @@ class App extends Component {
     )
   }
 }
-const CheckAll = styled.input`
+const CheckAll = styled.div`
   position:absolute;
   top:15px;
-  left:5px;
+  left:10px;
 `
 const InputWrapper = styled.div`
   position:relative;
@@ -147,7 +174,7 @@ const Centered = styled.div`
   text-align:center;
 `
 const Input = styled.input`
-    padding: 16px 16px 16px 30px;
+    padding: 16px 16px 16px 45px;
     min-width:450px;
     width:100%;
     border: none;
